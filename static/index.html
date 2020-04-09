@@ -6,12 +6,12 @@
 
     <style type='text/css'>
       body {
-        text-align: center;
         margin: 0;
       }
       .invis {
         display: none;
       }
+      #fm2-ui { text-align: center; }
       .fm2-button:hover {
         text-decoration: underline;
         cursor: pointer;
@@ -26,34 +26,37 @@
     <script type="text/javascript" src="fm2.js"></script>
     <script type="text/javascript" src="overseer.js"></script>
 
-    <!-- Contained div for canvas used by em-fceux. -->
-    <div style="width: 521px; height: 400px; text-align: center">
-      <canvas id="nes-canvas"></canvas>
-      <div id="button" onclick="start()" class='invis'>Click to start.</div>
-    </div>
-    <div id='fm2-ui' class='invis'>
-      <span id='fm2-ui-reset' class='fm2-button' title='Reset'            >🔄</span>
-      <!-- <span id='fm2-ui-pause' class='fm2-button'>⏯️</span> -->
-      <span id='fm2-ui-slow'  class='fm2-button' title='Slow down'        >⏪</span>
-      <span id='fm2-ui-100'   class='fm2-button' title='Set speed to 100%'>💯</span>
-      <span id='fm2-ui-fast'  class='fm2-button' title='Speed up'         >⏩</span>
-    </div>
+    <main>
+      <!-- Container div for canvas used by em-fceux. -->
+      <div style="width: 521px; height: 400px; text-align: center">
+        <canvas id="nes-canvas"></canvas>
+        <div id="button" onclick="start()" class='invis'>Click to start.</div>
+        <div id='fm2-ui' class='invis'>
+          <span id='fm2-ui-reset' class='fm2-button' title='Reset'            >🔄</span>
+          <!-- <span id='fm2-ui-pause' class='fm2-button'>⏯️</span> -->
+          <span id='fm2-ui-slow'  class='fm2-button' title='Slow down'        >⏪</span>
+          <span id='fm2-ui-100'   class='fm2-button' title='Set speed to 100%'>💯</span>
+          <span id='fm2-ui-fast'  class='fm2-button' title='Speed up'         >⏩</span>
+        </div>
+      </div>
 
 
-    <div id='play-ui' class='invis'>
-      <p>DPad: Arrow keys<br/>Start: Return, Select: Tab<br/>A Button: Z, B Button: X</p>
-      <p id='framerate'></p>
 
-      <p id='play-load-rom'>
-          Load ROM:
-          <input type="file" id="romFileSelect" />
-      </p>
+      <div id='play-ui' class='invis'>
+        <p>DPad: Arrow keys<br/>Start: Return, Select: Tab<br/>A Button: Z, B Button: X</p>
+        <p id='framerate'></p>
 
-      <p id='play-load-fm2'>
-          Load FM2:
-          <input type="file" id="fm2FileSelect" />
-      </p>
-    </div>
+        <p id='play-load-rom'>
+            Load ROM:
+            <input type="file" id="romFileSelect" />
+        </p>
+
+        <p id='play-load-fm2'>
+            Load FM2:
+            <input type="file" id="fm2FileSelect" />
+        </p>
+      </div>
+    </main>
 
     <script>
 
@@ -70,6 +73,7 @@
       if (inIframe && overseer.rom && overseer.fm2) { 
         document.getElementById('play-ui').className = 'invis';
       } else {
+        document.getElementById('play-ui').className = '';
         // Don't show upload dialogs for things we've been passed
         if (overseer.rom) document.getElementById('play-load-rom').className = 'invis';
         if (overseer.fm2) document.getElementById('play-load-fm2').className = 'invis';
@@ -84,10 +88,10 @@
         fceux.init('#nes-canvas');
         overseer.setNES(fceux);
 
-        // Init fm2 UI
+        // Init UI
+        // Speed control doesn't work outside FM2 mode, so only display the UI if we're playing a movie
         if (overseer.fm2) {
           document.getElementById('fm2-ui').className = '';
-          
           document.getElementById('fm2-ui-reset').addEventListener('click', () => {
             // for whatever reason em-fceux crashes if you reset more than twice
             const newfceux = FCEUX().then(() => {
