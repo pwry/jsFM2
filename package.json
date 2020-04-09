@@ -1,0 +1,10 @@
+{
+  "name": "em-fceux-examples-minimal",
+  "private": true,
+  "scripts": {
+    "start": "cd static && python -m SimpleHTTPServer 8080 ; true"
+  },
+  "devDependencies": {
+    "em-fceux": "^0.6.0"
+  }
+}

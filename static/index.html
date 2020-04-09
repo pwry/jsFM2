@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>jsfm2</title>
+
+    <style type='text/css'>
+      body {
+        text-align: center;
+        margin: 0;
+      }
+      .invis {
+        display: none;
+      }
+      .fm2-button:hover {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Import em-fceux. -->
+    <script type="text/javascript" src="fceux.js"></script>
+    <!-- Import jsfm2. -->
+    <script type="text/javascript" src="fm2.js"></script>
+    <script type="text/javascript" src="overseer.js"></script>
+
+    <!-- Contained div for canvas used by em-fceux. -->
+    <div style="width: 521px; height: 400px; text-align: center">
+      <canvas id="nes-canvas"></canvas>
+      <div id="button" onclick="start()" class='invis'>Click to start.</div>
+    </div>
+    <div id='fm2-ui' class='invis'>
+      <span id='fm2-ui-reset' class='fm2-button' title='Reset'            >🔄</span>
+      <!-- <span id='fm2-ui-pause' class='fm2-button'>⏯️</span> -->
+      <span id='fm2-ui-slow'  class='fm2-button' title='Slow down'        >⏪</span>
+      <span id='fm2-ui-100'   class='fm2-button' title='Set speed to 100%'>💯</span>
+      <span id='fm2-ui-fast'  class='fm2-button' title='Speed up'         >⏩</span>
+    </div>
+
+
+    <div id='play-ui' class='invis'>
+      <p>DPad: Arrow keys<br/>Start: Return, Select: Tab<br/>A Button: Z, B Button: X</p>
+      <p id='framerate'></p>
+
+      <p id='play-load-rom'>
+          Load ROM:
+          <input type="file" id="romFileSelect" />
+      </p>
+
+      <p id='play-load-fm2'>
+          Load FM2:
+          <input type="file" id="fm2FileSelect" />
+      </p>
+    </div>
+
+    <script>
+
+      const button = document.querySelector('#button');
+
+      // Create em-fceux instance.
+      // Show the button div when instance is ready.
+      const fceux = FCEUX().then(() => button.className = '');
+
+      const overseer = new Overseer();
+      
+      // If we have a rom and an fm2 and we're in an iframe, hide the play UI entirely
+      const inIframe = (window.name || window.location !== window.parent.location);
+      if (inIframe && overseer.rom && overseer.fm2) { 
+        document.getElementById('play-ui').className = 'invis';
+      } else {
+        // Don't show upload dialogs for things we've been passed
+        if (overseer.rom) document.getElementById('play-load-rom').className = 'invis';
+        if (overseer.fm2) document.getElementById('play-load-fm2').className = 'invis';
+      }
+
+      // Entry point called by the button.
+      function start() {
+        button.className = 'invis';
+
+        // Init the instance.
+        // Must be done in an event handler and only done once.
+        fceux.init('#nes-canvas');
+        overseer.setNES(fceux);
+
+        // Init fm2 UI
+        if (overseer.fm2) {
+          document.getElementById('fm2-ui').className = '';
+          
+          document.getElementById('fm2-ui-reset').addEventListener('click', () => {
+            // for whatever reason em-fceux crashes if you reset more than twice
+            const newfceux = FCEUX().then(() => {
+              newfceux.init('#nes-canvas');
+              overseer.setNES(newfceux);
+              overseer.playFM2();
+            })
+          });
+          document.getElementById('fm2-ui-slow').addEventListener('click', overseer.speedDown.bind(overseer));
+          document.getElementById('fm2-ui-100').addEventListener('click', overseer.resetSpeed.bind(overseer));
+          document.getElementById('fm2-ui-fast').addEventListener('click', overseer.speedUp.bind(overseer));
+        }
+
+        // Start playing whatever we have loaded.
+        overseer.play();
+      }
+
+      // ROM and FM2 selectors
+      function handleROMSelect(evt) {
+            const file = evt.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (readEvt) {
+                const romBuffer = readEvt.target.result;
+                const romArr = new Uint8Array(romBuffer);
+                overseer.setROM(romArr);
+            }
+            
+            reader.readAsArrayBuffer(file);
+        }
+        function handleFM2Select(evt) {
+            const file = evt.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (readEvt) {
+                overseer.setFM2(readEvt.target.result);
+            }
+
+            reader.readAsBinaryString(file);
+        }
+        document.getElementById('romFileSelect').addEventListener('change', handleROMSelect);
+        document.getElementById('fm2FileSelect').addEventListener('change', handleFM2Select);
+    </script>
+
+  </body>
+</html>
