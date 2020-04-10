@@ -68,7 +68,10 @@ class Overseer {
     resetSpeed() {
         this.speed = 1;
         this.speedI = 0;
+        this.paused = false;
     }
+    isPaused() { return this.paused; }
+    togglePause() { this.paused = !this.paused; return this.paused; }
 
     // button codes are defined in this.BUTTONS
     buttonDown(port, buttonCode) {
@@ -205,6 +208,8 @@ class Overseer {
     playFM2Frame() {
         this.animation = window.requestAnimationFrame(this.playFM2Frame.bind(this));
 
+        if (this.paused) return;
+        
         // TODO clean this up
         if (this.speed === 1) {
             this.fm2.nextFrame(this.nes);
