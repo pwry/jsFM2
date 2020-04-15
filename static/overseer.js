@@ -191,6 +191,7 @@ class Overseer {
     playFM2() {
         if (this.animation) window.cancelAnimationFrame(this.animation);
         this.unbindKeys();
+        this.handledFM2EOF = false;
 
         // incantations discovered by trial and error
         // have to run update before setPaused, but that messes with state
@@ -207,33 +208,41 @@ class Overseer {
     }
     playFM2Frame() {
         this.animation = window.requestAnimationFrame(this.playFM2Frame.bind(this));
-
         if (this.paused) return;
-        
-        // TODO clean this up
-        if (this.speed === 1) {
+
+        const go = () => { 
             this.fm2.nextFrame(this.nes);
             this.handleButtons();
             this.nes.advanceFrame();
             this.nes.update();
+            this.testEOF();
+        }
+        
+        if (this.speed === 1) {
+            go();
         } else if (this.speed > 1) {
             for (let i = 0; i < this.speed; i++) {
-                this.fm2.nextFrame(this.nes);
-                this.handleButtons();
-                this.nes.advanceFrame();
-                this.nes.update();
+                go();
             }
         } else if (this.speed < 0) {
             if (this.speedI === -this.speed) {
-                this.fm2.nextFrame(this.nes);
-                this.handleButtons();
-                this.nes.advanceFrame();
-                this.nes.update();
-
+                go();
                 this.speedI = 0;
             }
             this.speedI++;
         }
+    }
+    testEOF() {
+        // off by one
+        // if (this.fm2.eof() && !this.handledFM2EOF) {
+        //     // ideally we wouldn't go into the document from the overseer
+        //     // but w/e this is good enough for now (TODO?)
+        //     const pauseButton = document.getElementById('fm2-ui-pause');
+        //     pauseButton.innerText = '🔚';
+        //     pauseButton.title = 'Paused (movie ended)';
+        //     this.paused = true;
+        //     this.handledFM2EOF = true;
+        // }
     }
 
     play() {
