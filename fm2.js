@@ -77,6 +77,10 @@ function FM2(rawData, overseer, debug = false) {
     function err(msg) { throw new Error(`${msg} (${line}:${col})`); }
     function newline() { return col === 0; }
 
+    var lastFrameWasEOF = false; 
+
+    this.eof = eof; // export
+
     function parseField() {
         if (!newline()) err('Can\'t try to parse field in the middle of a line!');
         var fieldName = '', fieldValue = '';
@@ -139,10 +143,18 @@ function FM2(rawData, overseer, debug = false) {
     }
     const BIN_DO = {false: buttonUp, true: buttonDown};
 
+    function handleEOF() { // release all buttons
+        // without this it's one frame off. no idea why, easier to add a hack than investigate. should work
+        if (!lastFrameWasEOF) { lastFrameWasEOF = true; return; }
+        console.log('howdy from fm2! handling eof')
+        for (let [k, v] of Object.entries(BUTTONS)) {
+            _buttonUp(1, v); // TODO will need to change this for multiport support
+        }
+    }
+
     function nextBinaryFrame(nes) {
         if (debug) debug_line_log = '';
-        // TODO: better eof handling - keyups etc.
-        if (eof()) return;
+        if (eof()) { handleEOF(); return; }
         if (this.frameCount < 0) {
             this.frameCount++; return;
         }
@@ -169,8 +181,7 @@ function FM2(rawData, overseer, debug = false) {
     function isPressed(button) { return !(UNPRESSED.has(button)); }
     function nextTextFrame(nes) {
         if (debug) debug_line_log = '';
-        // TODO: better eof handling - keyups etc.
-        if (eof()) return;
+        if (eof()) { handleEOF(); return; }
         if (this.frameCount < 0) {
             this.frameCount++; return;
         }
