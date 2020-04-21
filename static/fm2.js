@@ -77,6 +77,8 @@ function FM2(rawData, overseer, debug = false) {
     function err(msg) { throw new Error(`${msg} (${line}:${col})`); }
     function newline() { return col === 0; }
 
+    var lastFrameWasEOF = false; 
+
     this.eof = eof; // export
 
     function parseField() {
@@ -142,6 +144,9 @@ function FM2(rawData, overseer, debug = false) {
     const BIN_DO = {false: buttonUp, true: buttonDown};
 
     function handleEOF() { // release all buttons
+        // without this it's one frame off. no idea why, easier to add a hack than investigate. should work
+        if (!lastFrameWasEOF) { lastFrameWasEOF = true; return; }
+        console.log('howdy from fm2! handling eof')
         for (let [k, v] of Object.entries(BUTTONS)) {
             _buttonUp(1, v); // TODO will need to change this for multiport support
         }

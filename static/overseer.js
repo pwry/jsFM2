@@ -210,12 +210,26 @@ class Overseer {
         this.animation = window.requestAnimationFrame(this.playFM2Frame.bind(this));
         if (this.paused) return;
 
-        const go = () => { 
+        const go = () => {
             this.fm2.nextFrame(this.nes);
             this.handleButtons();
+
+            // EOF handling - if we've hit EOF, we'll first hit it here
+            if (this.fm2.eof() && !this.handledFM2EOF) {
+                // window.cancelAnimationFrame(this.animation);
+                // ideally we wouldn't go into the document from the overseer
+                // but w/e this is good enough for now (TODO?)
+                const pauseButton = document.getElementById('fm2-ui-pause');
+                pauseButton.innerText = '🔚';
+                pauseButton.title = 'Paused (movie ended)';
+                this.paused = true;
+                this.handledFM2EOF = true;
+                return;
+            }
+
+            
             this.nes.advanceFrame();
             this.nes.update();
-            this.testEOF();
         }
         
         if (this.speed === 1) {
@@ -231,18 +245,6 @@ class Overseer {
             }
             this.speedI++;
         }
-    }
-    testEOF() {
-        // off by one
-        // if (this.fm2.eof() && !this.handledFM2EOF) {
-        //     // ideally we wouldn't go into the document from the overseer
-        //     // but w/e this is good enough for now (TODO?)
-        //     const pauseButton = document.getElementById('fm2-ui-pause');
-        //     pauseButton.innerText = '🔚';
-        //     pauseButton.title = 'Paused (movie ended)';
-        //     this.paused = true;
-        //     this.handledFM2EOF = true;
-        // }
     }
 
     play() {
