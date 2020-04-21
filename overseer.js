@@ -25,6 +25,7 @@ class Overseer {
         // n=2: 200%, n=-2: 50%.
         // -1 and 0 don't make sense as values, so speedUp() and speedDown() skip them.
         this.resetSpeed();
+        this.paused = false;
 
         function isROMData(str) { return str.slice(0, 4) === 'rom=' }
         function isFM2Data(str) { return str.slice(0, 4) === 'fm2=' }
@@ -68,7 +69,6 @@ class Overseer {
     resetSpeed() {
         this.speed = 1;
         this.speedI = 0;
-        this.paused = false;
     }
     isPaused() { return this.paused; }
     togglePause() { this.paused = !this.paused; return this.paused; }
@@ -203,6 +203,7 @@ class Overseer {
         this.nes.loadState();
 
         this.resetSpeed();
+        this.paused = false;
 
         this.animation = window.requestAnimationFrame(this.playFM2Frame.bind(this));
     }
