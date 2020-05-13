@@ -114,33 +114,76 @@
           document.getElementById('fm2-ui-fast').addEventListener('click', overseer.speedUp.bind(overseer));
         }
 
+        // Experimental webm recording stuff
+        const recorder = startRecorder(document.getElementById('nes-canvas'));
+        overseer.fm2EOFCallback = () => stopRecorder(recorder);
+
         // Start playing whatever we have loaded.
         overseer.play();
       }
 
       // ROM and FM2 selectors
       function handleROMSelect(evt) {
-            const file = evt.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function (readEvt) {
-                const romBuffer = readEvt.target.result;
-                const romArr = new Uint8Array(romBuffer);
-                overseer.setROM(romArr);
-            }
-            
-            reader.readAsArrayBuffer(file);
+        const file = evt.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function (readEvt) {
+            const romBuffer = readEvt.target.result;
+            const romArr = new Uint8Array(romBuffer);
+            overseer.setROM(romArr);
         }
-        function handleFM2Select(evt) {
-            const file = evt.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function (readEvt) {
-                overseer.setFM2(readEvt.target.result);
-            }
+        
+        reader.readAsArrayBuffer(file);
+      }
+      function handleFM2Select(evt) {
+        const file = evt.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function (readEvt) {
+            overseer.setFM2(readEvt.target.result);
+        }
 
-            reader.readAsBinaryString(file);
+        reader.readAsBinaryString(file);
+      }
+      document.getElementById('romFileSelect').addEventListener('change', handleROMSelect);
+      document.getElementById('fm2FileSelect').addEventListener('change', handleFM2Select);
+
+      // Experimental webm recording stuff
+      function startRecorder() {
+        const canvas = document.getElementById('nes-canvas');
+        const stream = canvas.captureStream(); // optional FPS param
+        const options = {mimeType: 'video/webm'};
+
+        var recordedChunks = [];
+        const recorder = new MediaRecorder(stream, options);
+        recorder.ondataavailable = handleDataAvailable;
+        recorder.start();
+        console.log('starting recorder');
+
+        function handleDataAvailable(evt) {
+          console.log(evt);
+          if (evt.data.size > 0) { 
+            recordedChunks.push(evt.data);
+            console.log(`handling data - recordedChunks length ${recordedChunks.length}`)
+            recorder.download();
+          }
         }
-        document.getElementById('romFileSelect').addEventListener('change', handleROMSelect);
-        document.getElementById('fm2FileSelect').addEventListener('change', handleFM2Select);
+
+        recorder.download = function () {
+          console.log(`recordedChunks length at download: ${recordedChunks.length}`)
+          const blob = new Blob(recordedChunks, {type: "video/webm"});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = "test.webm";
+          a.innerText = "Download webm";
+          document.body.appendChild(a);
+        }
+        
+        return recorder;
+      }
+      function stopRecorder(recorder) {
+        console.log('stopping recorder')
+        recorder.stop();
+      }
     </script>
 
   </body>

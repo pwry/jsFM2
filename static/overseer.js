@@ -1,9 +1,10 @@
 class Overseer {
-    constructor (nes) {
+    constructor (fm2EOFCallback) {
         // -- OVERSEER STATE SETUP --
         this.animation = null;
         this.rom = null;
         this.fm2 = null;
+        this.fm2EOFCallback = null;
 
         // -- NES SETUP --
         // em-fceux needs to be initialized from an event handler, so we have to pass it in later.
@@ -225,6 +226,8 @@ class Overseer {
                 pauseButton.title = 'Paused (movie ended)';
                 this.paused = true;
                 this.handledFM2EOF = true;
+
+                if (this.fm2EOFCallback) this.fm2EOFCallback();
                 return;
             }
 
